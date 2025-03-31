@@ -19,7 +19,7 @@ function AppRoutes() {
                 <Route path="/student/signin" element={<StudentSignin />} />  {/* ✅ Add Sign-In Route */}
                 <Route path="/teacher/signin" element={<TeacherSignin />} />  {/* ✅ Add Sign-In Route */}
 
-                {/* Protected Routes */}
+                
                 <Route path="/student/dashboard" element={
                     <ProtectedRoute allowedRoles={["student"]}>
                         <StudentDashboard />

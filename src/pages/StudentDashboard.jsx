@@ -1,27 +1,50 @@
+import { useState, useEffect } from "react";
+import { db } from "../config/firebase";
+import { collection, query, onSnapshot, updateDoc, doc, addDoc, where } from "firebase/firestore";
 import useAuthStore from "../store/authStore";
-import { useNavigate } from "react-router-dom";
 
 export default function StudentDashboard() {
     const { user, logout } = useAuthStore();
-    const navigate = useNavigate();
+    const [slots, setSlots] = useState([]);
+
+    useEffect(() => {
+        const slotsQuery = query(collection(db, "slots"), where("booked", "==", false));
+
+        const unsubscribe = onSnapshot(slotsQuery, (snapshot) => {
+            setSlots(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    const bookSlot = async (slot) => {
+        await updateDoc(doc(db, "slots", slot.id), { booked: true });
+        await addDoc(collection(db, "appointments"), {
+            studentId: user.uid,
+            studentName: user.name,
+            teacherId: slot.teacherId,
+            teacherName: slot.teacherName,
+            subject: slot.subject,
+            date: slot.date,
+            time: slot.time
+        });
+    };
 
     return (
-        <div className="p-6 min-h-screen bg-gray-900 text-white flex flex-col items-center">
-            <h2 className="text-3xl font-bold mb-6">Welcome, {user?.name || "Student"}!</h2>
+        <div className="min-h-screen bg-gray-900 text-white p-6">
+            <h2 className="text-3xl font-bold">Welcome, {user?.name || "Student"}!</h2>
+            <button onClick={logout} className="bg-red-500 px-4 py-2 rounded mt-4">Logout</button>
 
-            <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
-                <p className="mb-2"><strong>Name:</strong> {user?.name}</p>
-                <p className="mb-2"><strong>Age:</strong> {user?.age}</p>
-                <p className="mb-2"><strong>Gender:</strong> {user?.gender}</p>
-                <p className="mb-4"><strong>Phone:</strong> {user?.phone}</p>
-
-                <button
-                    onClick={() => { logout(); navigate("/"); }}
-                    className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600 transition"
-                >
-                    Logout
-                </button>
-            </div>
+            {/* Available Slots */}
+            <h3 className="text-xl font-bold mt-6">Available Classes</h3>
+            <ul className="mt-2">
+                {slots.map(slot => (
+                    <li key={slot.id} className="bg-gray-700 p-2 mt-2 rounded">
+                        {slot.subject} with {slot.teacherName} on {slot.date} at {slot.time}
+                        <button onClick={() => bookSlot(slot)} className="bg-green-500 px-4 py-1 ml-2 rounded">Book</button>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }
