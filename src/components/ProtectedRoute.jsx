@@ -2,15 +2,15 @@ import { Navigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 
 export default function ProtectedRoute({ allowedRoles, children }) {
-    const { user } = useAuthStore(); // Get user from Zustand store
+    const { user } = useAuthStore(); 
 
     if (!user) {
-        return <Navigate to="/" replace />; // Redirect to Home if not logged in
+        return <Navigate to="/" replace />; 
     }
 
     if (!allowedRoles.includes(user.role)) {
-        return <Navigate to="/" replace />; // Redirect if role is unauthorized
+        return <Navigate to="/" replace />;
     }
 
-    return children; // Render the requested page
+    return children;
 }
