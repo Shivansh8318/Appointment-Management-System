@@ -1,133 +1,93 @@
 import { useState } from "react";
+import { auth, db, RecaptchaVerifier, signInWithPhoneNumber } from "../config/firebase";
 import { useNavigate } from "react-router-dom";
-import useAuthStore from "../store/authStore"; 
-import { auth, RecaptchaVerifier, signInWithPhoneNumber } from "../config/firebase";
+import { setDoc, doc } from "firebase/firestore";
+import useAuthStore from "../store/authStore";
 
 export default function StudentSignup() {
-    const [name, setName] = useState("");
-    const [age, setAge] = useState("");
-    const [gender, setGender] = useState("male");
-    const [phone, setPhone] = useState("");
-    const [otp, setOtp] = useState("");
-    const [confirmationResult, setConfirmationResult] = useState(null);
+    const [formData, setFormData] = useState({
+        name: "",
+        age: "",
+        gender: "male",
+        phone: "",
+        subjects: [],
+        experience: "",
+        qualification: "",
+        bio: "",
+    });
+    const [otp, setOTP] = useState("");
+    const [otpSent, setOtpSent] = useState(false);
     const navigate = useNavigate();
-    const { setUser } = useAuthStore();
-
-    const setupRecaptcha = () => {
-        if (!window.recaptchaVerifier) {
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-                size: "invisible",
-                callback: (response) => console.log("reCAPTCHA Verified:", response),
-            });
-        }
-    };
+    const setUser = useAuthStore((state) => state.setUser);
 
     const sendOTP = async () => {
-        if (!phone) {
-            alert("Please enter your phone number");
-            return;
-        }
-
-        if (!window.recaptchaVerifier) {
-            setupRecaptcha();
-        }
-
         try {
-            const result = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
-            setConfirmationResult(result);
+            window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
+
+            const confirmationResult = await signInWithPhoneNumber(auth, formData.phone, window.recaptchaVerifier);
+            window.confirmationResult = confirmationResult;
+            setOtpSent(true);
+            alert("OTP sent!");
         } catch (error) {
             console.error("Error sending OTP:", error);
         }
     };
 
     const verifyOTP = async () => {
-        if (!confirmationResult) {
-            alert("No OTP sent!");
-            return;
-        }
-
+        if (!window.confirmationResult) return alert("No OTP sent!");
         try {
-            const userCredential = await confirmationResult.confirm(otp);
-            setUser({
-                uid: userCredential.user.uid,
-                name,
-                age,
-                gender,
-                phone,
-                role: "student",
+            const userCredential = await window.confirmationResult.confirm(otp);
+            const user = userCredential.user;
+
+            // Save student data to Firestore
+            await setDoc(doc(db, "students", user.uid), {
+                uid: user.uid,
+                name: formData.name,
+                age: formData.age,
+                gender: formData.gender,
+                phone: formData.phone,
+                subjects: formData.subjects,
+                experience: formData.experience,
+                qualification: formData.qualification,
+                bio: formData.bio,
             });
 
+            // Set user in global store
+            setUser({ ...user, role: "student", ...formData });
             navigate("/student/dashboard");
         } catch (error) {
             console.error("Error verifying OTP:", error);
         }
     };
 
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white px-4">
-            <h2 className="text-3xl font-bold mb-6">Student Signup</h2>
-
-            <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
-                <label className="block mb-2">Full Name</label>
-                <input
-                    type="text"
-                    className="w-full p-2 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter your full name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                />
-
-                <label className="block mb-2">Age</label>
-                <input
-                    type="number"
-                    className="w-full p-2 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter your age"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                />
-
-                <label className="block mb-2">Gender</label>
-                <select
-                    className="w-full p-2 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                >
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
+            <h2 className="text-2xl font-bold mb-4">Student Signup</h2>
+            <div className="bg-gray-800 p-6 rounded-lg w-96">
+                <input type="text" name="name" placeholder="Full Name" value={formData.name} onChange={handleChange} className="w-full p-2 my-2 bg-gray-700 text-white border rounded" />
+                <input type="number" name="age" placeholder="Age" value={formData.age} onChange={handleChange} className="w-full p-2 my-2 bg-gray-700 text-white border rounded" />
+                <select name="gender" value={formData.gender} onChange={handleChange} className="w-full p-2 my-2 bg-gray-700 text-white border rounded">
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                     <option value="other">Other</option>
                 </select>
-
-                <label className="block mb-2">Phone Number</label>
-                <input
-                    type="text"
-                    className="w-full p-2 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter phone number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                />
-                <button
-                    onClick={sendOTP}
-                    className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition"
-                >
-                    Send OTP
+                <input type="text" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full p-2 my-2 bg-gray-700 text-white border rounded" />
+                <input type="text" name="subjects" placeholder="Subjects (comma-separated)" value={formData.subjects} onChange={(e) => setFormData({ ...formData, subjects: e.target.value.split(",") })} className="w-full p-2 my-2 bg-gray-700 text-white border rounded" />
+                <input type="number" name="experience" placeholder="In which Year of college" value={formData.experience} onChange={handleChange} className="w-full p-2 my-2 bg-gray-700 text-white border rounded" />
+                <input type="text" name="qualification" placeholder="Qualification" value={formData.qualification} onChange={handleChange} className="w-full p-2 my-2 bg-gray-700 text-white border rounded" />
+                <textarea name="bio" placeholder="Short Bio" value={formData.bio} onChange={handleChange} className="w-full p-2 my-2 bg-gray-700 text-white border rounded" />
+                
+                {otpSent && <input type="text" placeholder="Enter OTP" value={otp} onChange={(e) => setOTP(e.target.value)} className="w-full p-2 my-2 bg-gray-700 text-white border rounded" />}
+                
+                <button className="w-full bg-blue-500 text-white px-4 py-2 mt-2 rounded" onClick={otpSent ? verifyOTP : sendOTP}>
+                    {otpSent ? "Verify OTP" : "Send OTP"}
                 </button>
-
                 <div id="recaptcha-container"></div>
-
-                <label className="block mt-4 mb-2">Enter OTP</label>
-                <input
-                    type="text"
-                    className="w-full p-2 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                />
-                <button
-                    onClick={verifyOTP}
-                    className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 transition"
-                >
-                    Verify OTP
-                </button>
             </div>
         </div>
     );
