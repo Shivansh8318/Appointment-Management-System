@@ -13,6 +13,7 @@ import DummyClass from "./pages/DummyClass";
 import StudentHomework from "./pages/StudentHomework";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PublicTeacherProfile from "./pages/PublicTeacherProfile"; // New import
 
 function AppRoutes() {
     return (
@@ -23,6 +24,7 @@ function AppRoutes() {
                 <Route path="/teacher/signup" element={<TeacherSignup />} />
                 <Route path="/student/signin" element={<StudentSignin />} />
                 <Route path="/teacher/signin" element={<TeacherSignin />} />
+                <Route path="/teacher/:teacherId" element={<PublicTeacherProfile />} /> {/* New public route */}
 
                 <Route path="/student/dashboard" element={
                     <ProtectedRoute allowedRoles={["student"]}>

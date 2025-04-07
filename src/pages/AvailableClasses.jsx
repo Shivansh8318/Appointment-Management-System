@@ -5,16 +5,27 @@ import useAuthStore from "../store/authStore";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import StudentNavbar from "../components/StudentNavbar";
+import { useLocation } from "react-router-dom";
 
 export default function AvailableClasses() {
     const { user } = useAuthStore();
     const [availableSlots, setAvailableSlots] = useState([]);
     const [activeTab, setActiveTab] = useState("available");
+    const location = useLocation();
 
     useEffect(() => {
         if (!user) return;
 
-        const q = query(collection(db, "slots"), where("booked", "==", false));
+        // Extract teacherId from URL query parameters
+        const searchParams = new URLSearchParams(location.search);
+        const teacherId = searchParams.get("teacherId");
+
+        // Build the query based on whether a teacherId filter is present
+        let q = query(collection(db, "slots"), where("booked", "==", false));
+        if (teacherId) {
+            q = query(collection(db, "slots"), where("booked", "==", false), where("teacherId", "==", teacherId));
+        }
+
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const slots = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setAvailableSlots(slots);
@@ -22,7 +33,7 @@ export default function AvailableClasses() {
             console.error("Error fetching available slots:", error);
         });
         return () => unsubscribe();
-    }, [user]);
+    }, [user, location.search]);
 
     const bookSlot = async (slotId, slot) => {
         if (!user) return alert("Please sign in to book a slot.");

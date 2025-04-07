@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "../config/firebase";
-import { collection, addDoc, query, onSnapshot, where, doc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, query, onSnapshot, where, doc, getDoc, updateDoc, setDoc, getDocs } from "firebase/firestore";
 import useAuthStore from "../store/authStore";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -15,14 +15,20 @@ export default function TeacherDashboard() {
     const [slots, setSlots] = useState([]);
     const [appointments, setAppointments] = useState([]);
     const [pastAppointments, setPastAppointments] = useState([]);
-    const [newSlot, setNewSlot] = useState({ dateTime: null, subject: "" });
+    const [slotRange, setSlotRange] = useState({
+        date: null,
+        startTime: null,
+        endTime: null,
+        duration: 30, // Default duration in minutes
+        subject: "", // Added subject to slotRange
+    });
     const [editSlot, setEditSlot] = useState(null);
     const [activeTab, setActiveTab] = useState("home");
     const [selectedPastAppointment, setSelectedPastAppointment] = useState(null);
     const [homeworkInputs, setHomeworkInputs] = useState({});
     const [profilePic, setProfilePic] = useState(null);
-    const [notes, setNotes] = useState({});
-    const [saving, setSaving] = useState(false); // Control saving state
+    const [teacherNotes, setTeacherNotes] = useState({});
+    const [saving, setSaving] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -36,7 +42,7 @@ export default function TeacherDashboard() {
                     const savedProfilePic = localStorage.getItem(`profilePic_${user.uid}`);
                     setProfilePic(savedProfilePic || "https://via.placeholder.com/150");
                     if (data.subjects && data.subjects.length > 0) {
-                        setNewSlot(prev => ({ ...prev, subject: data.subjects[0] }));
+                        setSlotRange(prev => ({ ...prev, subject: data.subjects[0] }));
                     }
                 }
             };
@@ -45,6 +51,7 @@ export default function TeacherDashboard() {
 
             const slotsQuery = query(collection(db, "slots"), where("teacherId", "==", user.uid));
             const appointmentsQuery = query(collection(db, "appointments"), where("teacherId", "==", user.uid));
+            const notesQuery = query(collection(db, "teacherNotes"), where("teacherId", "==", user.uid));
 
             const unsubSlots = onSnapshot(slotsQuery, (snapshot) => {
                 setSlots(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(slot => !slot.booked));
@@ -57,7 +64,6 @@ export default function TeacherDashboard() {
                     const data = { id: doc.id, ...doc.data() };
                     if (data.completed) {
                         past.push(data);
-                        if (data.notes) setNotes(prev => ({ ...prev, [data.id]: data.notes }));
                     } else {
                         upcoming.push(data);
                     }
@@ -66,9 +72,18 @@ export default function TeacherDashboard() {
                 setPastAppointments(past);
             });
 
+            const unsubNotes = onSnapshot(notesQuery, (snapshot) => {
+                const notesData = {};
+                snapshot.docs.forEach(doc => {
+                    notesData[doc.data().appointmentId] = doc.data().content;
+                });
+                setTeacherNotes(notesData);
+            });
+
             return () => {
                 unsubSlots();
                 unsubAppointments();
+                unsubNotes();
             };
         }
     }, [user]);
@@ -89,25 +104,51 @@ export default function TeacherDashboard() {
                     alert("Failed to save profile picture.");
                 }
             };
-            reader.onerror = () => {
-                console.error("Error reading file");
-                alert("Failed to process the image.");
-            };
             reader.readAsDataURL(file);
         }
     };
 
-    const addSlot = async () => {
-        if (!newSlot.dateTime || !newSlot.subject) return alert("All fields are required.");
-        await addDoc(collection(db, "slots"), {
-            teacherId: user.uid,
-            teacherName: teacher?.name || "Unknown",
-            date: newSlot.dateTime.toISOString().split("T")[0],
-            time: newSlot.dateTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            subject: newSlot.subject,
-            booked: false,
-        });
-        setNewSlot({ dateTime: null, subject: teacher?.subjects?.[0] || "" });
+    const addSlotRange = async () => {
+        const { date, startTime, endTime, duration, subject } = slotRange;
+        if (!date || !startTime || !endTime || !subject) return alert("All fields are required for slot range.");
+
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        const slotDate = new Date(date);
+        const slotsToAdd = [];
+
+        // Validation
+        if (start >= end) return alert("Start time must be before end time.");
+        if (duration <= 0) return alert("Duration must be greater than 0.");
+
+        // Generate slots in the range
+        let currentTime = new Date(start);
+        while (currentTime < end) {
+            const slotEnd = new Date(currentTime.getTime() + duration * 60000); // duration in minutes to milliseconds
+            if (slotEnd > end) break; // Don’t exceed end time
+
+            slotsToAdd.push({
+                teacherId: user.uid,
+                teacherName: teacher?.name || "Unknown",
+                date: slotDate.toISOString().split("T")[0],
+                time: currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                subject,
+                booked: false,
+            });
+
+            currentTime = slotEnd; // Move to next slot
+        }
+
+        try {
+            for (const slot of slotsToAdd) {
+                await addDoc(collection(db, "slots"), slot);
+            }
+            alert(`Added ${slotsToAdd.length} slots successfully!`);
+            setSlotRange({ date: null, startTime: null, endTime: null, duration: 30, subject: teacher?.subjects?.[0] || "" });
+        } catch (error) {
+            console.error("Error adding slot range:", error);
+            alert("Failed to add slot range.");
+        }
     };
 
     const editSlotHandler = (slot) => {
@@ -151,11 +192,34 @@ export default function TeacherDashboard() {
     };
 
     const saveNote = async (appointmentId, note) => {
-        if (saving || notes[appointmentId] === note) return; // Prevent multiple saves
+        if (saving || teacherNotes[appointmentId] === note) return;
         setSaving(true);
         try {
-            await updateDoc(doc(db, "appointments", appointmentId), { notes: note });
-            setNotes(prev => ({ ...prev, [appointmentId]: note }));
+            const notesQuery = query(
+                collection(db, "teacherNotes"),
+                where("teacherId", "==", user.uid),
+                where("appointmentId", "==", appointmentId)
+            );
+            
+            const existingNotes = await getDocs(notesQuery);
+            
+            if (existingNotes.docs.length > 0) {
+                const noteDocId = existingNotes.docs[0].id;
+                await updateDoc(doc(db, "teacherNotes", noteDocId), { 
+                    content: note,
+                    updatedAt: new Date().toISOString()
+                });
+            } else {
+                await setDoc(doc(collection(db, "teacherNotes")), {
+                    teacherId: user.uid,
+                    appointmentId: appointmentId,
+                    content: note,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+            }
+            
+            setTeacherNotes(prev => ({ ...prev, [appointmentId]: note }));
             alert("Note saved successfully!");
         } catch (error) {
             console.error("Error saving note:", error);
@@ -215,18 +279,47 @@ export default function TeacherDashboard() {
                 {activeTab === "addSlot" && (
                     <div className="w-full max-w-3xl bg-gradient-to-br from-gray-800/70 to-indigo-900/70 backdrop-blur-xl p-10 rounded-3xl shadow-2xl border border-gray-700/30">
                         <h3 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                            Add Available Slot
+                            Add Multiple Slots
                         </h3>
                         <DatePicker
-                            selected={newSlot.dateTime}
-                            onChange={(date) => setNewSlot({ ...newSlot, dateTime: date })}
-                            showTimeSelect
-                            dateFormat="Pp"
+                            selected={slotRange.date}
+                            onChange={(date) => setSlotRange({ ...slotRange, date })}
+                            dateFormat="MMMM d, yyyy"
                             className="w-full p-3 mb-4 bg-gray-700/50 rounded-lg text-white border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholderText="Select Date"
+                        />
+                        <DatePicker
+                            selected={slotRange.startTime}
+                            onChange={(date) => setSlotRange({ ...slotRange, startTime: date })}
+                            showTimeSelect
+                            showTimeSelectOnly
+                            timeIntervals={15}
+                            dateFormat="h:mm aa"
+                            className="w-full p-3 mb-4 bg-gray-700/50 rounded-lg text-white border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholderText="Start Time"
+                        />
+                        <DatePicker
+                            selected={slotRange.endTime}
+                            onChange={(date) => setSlotRange({ ...slotRange, endTime: date })}
+                            showTimeSelect
+                            showTimeSelectOnly
+                            timeIntervals={15}
+                            dateFormat="h:mm aa"
+                            className="w-full p-3 mb-4 bg-gray-700/50 rounded-lg text-white border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholderText="End Time"
+                        />
+                        <input
+                            type="number"
+                            value={slotRange.duration}
+                            onChange={(e) => setSlotRange({ ...slotRange, duration: parseInt(e.target.value) || 30 })}
+                            min="15"
+                            step="15"
+                            className="w-full p-3 mb-4 bg-gray-700/50 rounded-lg text-white border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="Duration (minutes)"
                         />
                         <select
-                            value={newSlot.subject}
-                            onChange={(e) => setNewSlot({ ...newSlot, subject: e.target.value })}
+                            value={slotRange.subject}
+                            onChange={(e) => setSlotRange({ ...slotRange, subject: e.target.value })}
                             className="w-full p-3 mb-6 bg-gray-700/50 rounded-lg text-white border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
                             {teacher?.subjects?.length > 0 ? (
@@ -240,10 +333,10 @@ export default function TeacherDashboard() {
                             )}
                         </select>
                         <button
-                            onClick={addSlot}
+                            onClick={addSlotRange}
                             className="w-full py-3 rounded-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 shadow-lg font-medium transition-all duration-300 hover:shadow-xl"
                         >
-                            Add Slot
+                            Add Slots
                         </button>
                     </div>
                 )}
@@ -378,10 +471,10 @@ export default function TeacherDashboard() {
                                                 </p>
                                             )}
                                             <textarea
-                                                value={notes[app.id] || ""}
-                                                onChange={(e) => setNotes(prev => ({ ...prev, [app.id]: e.target.value }))}
+                                                value={teacherNotes[app.id] || ""}
+                                                onChange={(e) => setTeacherNotes(prev => ({ ...prev, [app.id]: e.target.value }))}
                                                 onBlur={(e) => saveNote(app.id, e.target.value)}
-                                                placeholder="Add a note..."
+                                                placeholder={teacherNotes[app.id] ? teacherNotes[app.id] : "Add a note..."}
                                                 className="w-full mt-4 p-3 bg-gray-700/50 rounded-lg text-white border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-purple-500 animate-fade-in-delay resize-none"
                                                 style={{ animationDelay: "0.5s" }}
                                             />
@@ -402,7 +495,7 @@ export default function TeacherDashboard() {
                                             <div key={app.id} className="mb-4 text-lg text-gray-200">
                                                 <p>{app.subject} on {app.date} at {app.time}</p>
                                                 {app.homework && <p className="text-gray-300">Homework: {app.homework}</p>}
-                                                {app.notes && <p className="text-gray-300">Notes: {app.notes}</p>}
+                                                {teacherNotes[app.id] && <p className="text-gray-300">Notes: {teacherNotes[app.id]}</p>}
                                             </div>
                                         ))}
                                 </div>

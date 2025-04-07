@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber,setPersistence, browserSessionPersistence } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -18,6 +18,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+
+setPersistence(auth, browserSessionPersistence)
+    .catch((error) => console.error("Error setting persistence:", error));
 
 
 export { auth, db, RecaptchaVerifier, signInWithPhoneNumber, setDoc, getDoc, doc,storage  };
