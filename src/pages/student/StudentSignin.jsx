@@ -1,16 +1,23 @@
-import { useState } from "react";
-import { auth, RecaptchaVerifier, signInWithPhoneNumber } from "../config/firebase";
+import { useState, useEffect } from "react"; // Add useEffect
 import { useNavigate } from "react-router-dom";
-import useAuthStore from "../store/authStore";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import { auth, db, RecaptchaVerifier, signInWithPhoneNumber, getDoc, doc } from "../../config/firebase";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import useAuthStore from "../../store/authStore";
 
-export default function TeacherSignin() {
+export default function StudentSignin() {
     const [phone, setPhone] = useState("");
     const [otp, setOtp] = useState("");
     const [confirmationResult, setConfirmationResult] = useState(null);
     const navigate = useNavigate();
-    const setUser = useAuthStore((state) => state.setUser);
+    const { user, loading, setUser } = useAuthStore(); // Get user, loading, and setUser
+
+    // Redirect if already signed in
+    useEffect(() => {
+        if (!loading && user) {
+            navigate("/student/dashboard");
+        }
+    }, [user, loading, navigate]);
 
     const setupRecaptcha = () => {
         if (!window.recaptchaVerifier) {
@@ -41,19 +48,31 @@ export default function TeacherSignin() {
         try {
             const userCredential = await confirmationResult.confirm(otp);
             const user = userCredential.user;
-            setUser({ ...user, role: "teacher" });
-            navigate("/teacher/dashboard");
+            const userDocRef = doc(db, "students", user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+
+            if (userDocSnap.exists()) {
+                const userData = userDocSnap.data();
+                setUser({ ...userData, role: "student" });
+                navigate("/student/dashboard");
+            } else {
+                alert("User not found! Please sign up first.");
+            }
         } catch (error) {
             console.error("Error verifying OTP:", error);
             alert("Invalid OTP. Try again.");
         }
     };
 
+    if (loading) {
+        return <div>Loading...</div>; // Show loading state while auth is being checked
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 to-indigo-900 text-white flex flex-col">
             <Header />
             <div className="flex flex-col items-center justify-center flex-grow p-6">
-                <h2 className="text-3xl font-bold mb-6">Teacher Sign In</h2>
+                <h2 className="text-3xl font-bold mb-6">Student Sign In</h2>
                 <div className="bg-gray-800/80 backdrop-blur-sm p-8 rounded-xl w-full max-w-md shadow-2xl border border-gray-700">
                     <input
                         type="text"
@@ -84,10 +103,10 @@ export default function TeacherSignin() {
                         Verify OTP
                     </button>
                     <p className="mt-4 text-center text-gray-300">
-                        Not a teacher yet?{" "}
+                        Not a student yet?{" "}
                         <button
                             className="text-blue-400 underline hover:text-blue-300 transition-colors"
-                            onClick={() => navigate("/teacher/signup")}
+                            onClick={() => navigate("/student/signup")}
                         >
                             Sign Up
                         </button>

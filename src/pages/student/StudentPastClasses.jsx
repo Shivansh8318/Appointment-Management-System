@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { db } from "../config/firebase";
+import { db } from "../../config/firebase";
 import { collection, query, where, onSnapshot, doc, setDoc, getDocs, updateDoc } from "firebase/firestore";
-import useAuthStore from "../store/authStore";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import StudentNavbar from "../components/StudentNavbar";
-import PastClassDetails from "../components/PastClassDetails";
+import useAuthStore from "../../store/authStore";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import StudentNavbar from "../../components/StudentNavbar";
+import PastClassDetails from "../../components/PastClassDetails";
 
 export default function StudentPastClasses() {
     const { user } = useAuthStore();

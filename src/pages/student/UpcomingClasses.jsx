@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { db } from "../config/firebase";
+import { db } from "../../config/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
-import useAuthStore from "../store/authStore";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import StudentNavbar from "../components/StudentNavbar";
+import useAuthStore from "../../store/authStore";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import StudentNavbar from "../../components/StudentNavbar";
 import { useNavigate } from "react-router-dom";
 
 export default function UpcomingClasses() {

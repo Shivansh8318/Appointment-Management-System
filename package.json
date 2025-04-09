@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@googleapis/calendar": "^9.8.0",
     "@tailwindcss/vite": "^4.0.17",
     "date-fns": "^4.1.0",
     "firebase": "^11.5.0",
+    "google-auth-library": "^9.15.1",
     "otp-input-react": "^0.3.0",
     "react": "^19.0.0",
     "react-datepicker": "^8.2.1",

@@ -16,12 +16,11 @@ export default function StudentNavbar({ setActiveTab }) {
     const handleTabClick = (tab, path) => {
         setActiveTab(tab);
         navigate(path);
-        setIsMenuOpen(false); // Close menu on selection
+        setIsMenuOpen(false);
     };
 
     return (
         <nav className="bg-gradient-to-r from-gray-800/80 to-indigo-900/80 backdrop-blur-lg p-4 shadow-2xl border-b border-gray-700/50 sticky top-0 z-20">
-            {/* Desktop Navigation */}
             <div className="hidden md:flex justify-center space-x-8">
                 {tabs.map((tab) => (
                     <button
@@ -33,20 +32,12 @@ export default function StudentNavbar({ setActiveTab }) {
                     </button>
                 ))}
             </div>
-
-            {/* Mobile Navigation */}
             <div className="md:hidden flex justify-between items-center">
                 <button
                     className="text-white focus:outline-none"
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                 >
-                    <svg
-                        className="w-8 h-8"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -56,8 +47,6 @@ export default function StudentNavbar({ setActiveTab }) {
                     </svg>
                 </button>
             </div>
-
-            {/* Mobile Menu */}
             {isMenuOpen && (
                 <div className="md:hidden absolute top-16 left-0 w-full bg-gradient-to-r from-gray-800/90 to-indigo-900/90 backdrop-blur-lg p-4 flex flex-col items-center space-y-4 shadow-lg">
                     {tabs.map((tab) => (
