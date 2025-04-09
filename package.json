@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/android": "^7.2.0",
+    "@capacitor/cli": "^7.2.0",
+    "@capacitor/core": "^7.2.0",
     "@googleapis/calendar": "^9.8.0",
     "@tailwindcss/vite": "^4.0.17",
     "date-fns": "^4.1.0",

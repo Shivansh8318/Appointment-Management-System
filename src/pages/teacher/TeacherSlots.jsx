@@ -36,6 +36,7 @@ export default function TeacherSlots() {
             await setDoc(slotRef, {
                 teacherId: user.uid,
                 teacherName: user.name,
+                teacherUsername: user.username, // Add teacherUsername from user object
                 subject,
                 date: selectedDate,
                 time: selectedTime,

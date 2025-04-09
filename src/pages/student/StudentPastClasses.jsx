@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Added for redirect
 import { db } from "../../config/firebase";
 import { collection, query, where, onSnapshot, doc, setDoc, getDocs, updateDoc } from "firebase/firestore";
 import useAuthStore from "../../store/authStore";
@@ -14,6 +15,39 @@ export default function StudentPastClasses() {
     const [activeTab, setActiveTab] = useState("past");
     const [studentNotes, setStudentNotes] = useState({});
     const [saving, setSaving] = useState(false);
+    const navigate = useNavigate(); // Added for navigation
+
+    // Redirect to sign-in if not logged in
+    useEffect(() => {
+        if (!user) {
+            navigate("/student/signin");
+        }
+    }, [user, navigate]);
+
+    // Fetch teacherUsername from usernames collection
+    const fetchTeacherUsername = async (teacherId) => {
+        try {
+            const usernameQuery = query(collection(db, "usernames"));
+            const usernameSnapshot = await getDocs(usernameQuery);
+            let teacherUsername = null;
+
+            usernameSnapshot.forEach(doc => {
+                if (doc.data().uid === teacherId) {
+                    teacherUsername = doc.id; // Document ID is the username
+                }
+            });
+
+            if (!teacherUsername) {
+                console.warn(`No username found for teacherId: ${teacherId}`);
+                return "unknown";
+            }
+
+            return teacherUsername;
+        } catch (error) {
+            console.error("Error fetching teacher username:", error);
+            return "unknown";
+        }
+    };
 
     useEffect(() => {
         if (!user) return;
@@ -24,9 +58,20 @@ export default function StudentPastClasses() {
             where("completed", "==", true)
         );
         
-        const unsubscribeAppointments = onSnapshot(q, (snapshot) => {
-            const classes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const unsubscribeAppointments = onSnapshot(q, async (snapshot) => {
+            let classes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Always fetch teacherUsername from usernames collection to ensure correctness
+            classes = await Promise.all(classes.map(async (cls) => {
+                const teacherUsername = await fetchTeacherUsername(cls.teacherId);
+                console.log(`Fetched username for teacherId ${cls.teacherId}: ${teacherUsername}`); // Debug log
+                return { ...cls, teacherUsername }; // Overwrite teacherUsername regardless of existing value
+            }));
+
+            console.log("Past classes with updated usernames:", classes); // Debug log
+
             setPastClasses(classes);
+
             const newNotes = { ...studentNotes };
             classes.forEach(cls => {
                 const noteKey = `${cls.subject}_${cls.teacherName}_${cls.id}`;
@@ -110,9 +155,15 @@ export default function StudentPastClasses() {
         }
     };
 
-    const shareTeacher = (teacherId, teacherName) => {
-        const shareUrl = `${window.location.origin}/teacher/${teacherId}`;
+    const shareTeacher = (teacherUsername, teacherName) => {
+        if (!teacherUsername || teacherUsername === "unknown") {
+            console.error("Invalid teacherUsername:", teacherUsername);
+            alert("Unable to share: Teacher username not found.");
+            return;
+        }
+        const shareUrl = `${window.location.origin}/teacher/${teacherUsername}`;
         const shareText = `Check out ${teacherName}'s profile and book their classes here: ${shareUrl}`;
+        console.log("Generated share URL:", shareUrl); // Debug log
     
         if (navigator.share) {
             navigator.share({
@@ -127,6 +178,7 @@ export default function StudentPastClasses() {
             fallbackShare(shareUrl);
         }
     };
+
     const fallbackShare = (shareUrl) => {
         navigator.clipboard.writeText(shareUrl)
             .then(() => {
@@ -137,6 +189,10 @@ export default function StudentPastClasses() {
                 alert("Failed to copy link. Here it is: " + shareUrl);
             });
     };
+
+    if (!user) {
+        return null; // Render nothing while redirecting
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-black text-white flex flex-col relative overflow-hidden">
@@ -181,8 +237,8 @@ export default function StudentPastClasses() {
                                         />
                                         <button
                                             onClick={(e) => {
-                                                e.stopPropagation(); // Prevent triggering the li's onClick
-                                                shareTeacher(app.teacherId, app.teacherName);
+                                                e.stopPropagation();
+                                                shareTeacher(app.teacherUsername, app.teacherName);
                                             }}
                                             className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg text-white font-medium transition-all duration-300 hover:shadow-xl hover:scale-105 animate-bounce-in"
                                         >

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { auth, db, RecaptchaVerifier, signInWithPhoneNumber } from "../../config/firebase";
 import { useNavigate } from "react-router-dom";
-import { setDoc, doc, serverTimestamp } from "firebase/firestore";
+import { setDoc, doc, serverTimestamp, getDoc } from "firebase/firestore";
 import useAuthStore from "../../store/authStore";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -9,6 +9,7 @@ import Footer from "../../components/Footer";
 export default function TeacherSignup() {
     const [formData, setFormData] = useState({
         name: "",
+        username: "",
         age: "",
         gender: "male",
         phone: "",
@@ -22,15 +23,32 @@ export default function TeacherSignup() {
     const navigate = useNavigate();
     const { user, loading, setUser } = useAuthStore();
 
-    // Redirect authenticated users to TeacherHome
     useEffect(() => {
         if (!loading && user && user.role === "teacher") {
             navigate("/teacher/home", { replace: true });
         }
     }, [user, loading, navigate]);
 
+    const checkUsernameAvailability = async (username) => {
+        const usernameRef = doc(db, "usernames", username);
+        const docSnap = await getDoc(usernameRef);
+        return !docSnap.exists();
+    };
+
     const sendOTP = async () => {
         try {
+            // Check if username is available
+            const isUsernameAvailable = await checkUsernameAvailability(formData.username);
+            if (!isUsernameAvailable) {
+                alert("Username is already taken. Please choose a different one.");
+                return;
+            }
+
+            if (!formData.username.match(/^[a-zA-Z0-9]{4,20}$/)) {
+                alert("Username must be 4-20 characters long and contain only letters and numbers.");
+                return;
+            }
+
             window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
             const confirmationResult = await signInWithPhoneNumber(auth, formData.phone, window.recaptchaVerifier);
             window.confirmationResult = confirmationResult;
@@ -55,7 +73,14 @@ export default function TeacherSignup() {
                 createdAt: serverTimestamp(),
             };
 
+            // Store teacher data
             await setDoc(doc(db, "teachers", user.uid), teacherData);
+            // Store username separately to ensure uniqueness
+            await setDoc(doc(db, "usernames", formData.username), {
+                uid: user.uid,
+                createdAt: serverTimestamp()
+            });
+
             setUser({ ...user, ...teacherData, role: "teacher" });
             navigate("/teacher/home", { replace: true });
         } catch (error) {
@@ -81,6 +106,13 @@ export default function TeacherSignup() {
                         type="text"
                         name="name"
                         placeholder="Full Name"
+                        onChange={handleChange}
+                        className="w-full p-3 mb-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                        type="text"
+                        name="username"
+                        placeholder="Username (e.g., shivansh581)"
                         onChange={handleChange}
                         className="w-full p-3 mb-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />

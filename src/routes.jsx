@@ -13,7 +13,7 @@ import TeacherHome from "./pages/teacher/TeacherHome";
 import TeacherAddSlots from "./pages/teacher/TeacherAddSlots";
 import TeacherSlots from "./pages/teacher/TeacherSlots";
 import TeacherAppointments from "./pages/teacher/TeacherAppointments";
-import TeacherPast from "./pages/teacher/TeacherPast.jsx"; // Updated extension
+import TeacherPast from "./pages/teacher/TeacherPast.jsx";
 import PublicTeacherProfile from "./pages/PublicTeacherProfile";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -27,7 +27,7 @@ export default function AppRoutes() {
                 <Route path="/student/signin" element={<StudentSignin />} />
                 <Route path="/teacher/signup" element={<TeacherSignup />} />
                 <Route path="/teacher/signin" element={<TeacherSignin />} />
-                <Route path="/teacher/:teacherId" element={<PublicTeacherProfile />} />
+                <Route path="/teacher/:teacherUsername" element={<PublicTeacherProfile />} /> {/* Updated to use teacherUsername */}
 
                 <Route
                     path="/student/dashboard"

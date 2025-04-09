@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"; // Add useEffect
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom"; // Added useLocation
 import { auth, db, RecaptchaVerifier, signInWithPhoneNumber, getDoc, doc } from "../../config/firebase";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -10,14 +10,16 @@ export default function StudentSignin() {
     const [otp, setOtp] = useState("");
     const [confirmationResult, setConfirmationResult] = useState(null);
     const navigate = useNavigate();
-    const { user, loading, setUser } = useAuthStore(); // Get user, loading, and setUser
+    const location = useLocation(); // Added to access state.from
+    const { user, loading, setUser } = useAuthStore();
 
-    // Redirect if already signed in
     useEffect(() => {
         if (!loading && user) {
-            navigate("/student/dashboard");
+            const redirectTo = location.state?.from || "/student/dashboard";
+            console.log("User already logged in, redirecting to:", redirectTo); // Debug log
+            navigate(redirectTo);
         }
-    }, [user, loading, navigate]);
+    }, [user, loading, navigate, location.state]);
 
     const setupRecaptcha = () => {
         if (!window.recaptchaVerifier) {
@@ -54,7 +56,9 @@ export default function StudentSignin() {
             if (userDocSnap.exists()) {
                 const userData = userDocSnap.data();
                 setUser({ ...userData, role: "student" });
-                navigate("/student/dashboard");
+                const redirectTo = location.state?.from || "/student/dashboard";
+                console.log("Login successful, redirecting to:", redirectTo); // Debug log
+                navigate(redirectTo);
             } else {
                 alert("User not found! Please sign up first.");
             }
@@ -65,7 +69,7 @@ export default function StudentSignin() {
     };
 
     if (loading) {
-        return <div>Loading...</div>; // Show loading state while auth is being checked
+        return <div>Loading...</div>;
     }
 
     return (

@@ -21,7 +21,6 @@ export default function StudentSignup() {
     const navigate = useNavigate();
     const { user, loading, setUser } = useAuthStore(); // Get user, loading, and setUser
 
-    // Redirect if already signed in
     useEffect(() => {
         if (!loading && user) {
             navigate("/student/dashboard");

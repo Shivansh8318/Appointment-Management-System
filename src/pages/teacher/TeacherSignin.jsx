@@ -12,7 +12,7 @@ export default function TeacherSignin() {
     const navigate = useNavigate();
     const { user, loading, setUser } = useAuthStore();
 
-    // Redirect authenticated users to TeacherHome
+    
     useEffect(() => {
         if (!loading && user && user.role === "teacher") {
             navigate("/teacher/home", { replace: true });

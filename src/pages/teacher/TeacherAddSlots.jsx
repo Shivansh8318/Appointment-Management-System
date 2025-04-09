@@ -13,6 +13,8 @@ export default function TeacherAddSlots() {
     const [subject, setSubject] = useState("");
     const [teacherSubjects, setTeacherSubjects] = useState([]);
     const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [startTime, setStartTime] = useState(null); // New state for start time
+    const [endTime, setEndTime] = useState(null); // New state for end time
     const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
     // Fetch teacher's subjects
@@ -40,7 +42,6 @@ export default function TeacherAddSlots() {
         while (currentTime < endTime) {
             slots.push({
                 time: currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                selected: false
             });
             currentTime.setMinutes(currentTime.getMinutes() + 30);
         }
@@ -54,10 +55,26 @@ export default function TeacherAddSlots() {
         return `${day}/${month}/${year}`;
     };
 
-    const toggleSlot = (index) => {
-        const newSlots = [...slots];
-        newSlots[index].selected = !newSlots[index].selected;
-        setSlots(newSlots);
+    // Handle time slot selection
+    const selectTimeSlot = (time) => {
+        if (!startTime) {
+            setStartTime(time);
+            setEndTime(null); // Reset end time when selecting a new start
+        } else if (!endTime && time > startTime) {
+            setEndTime(time);
+        } else {
+            // If both start and end are set, reset and start anew
+            setStartTime(time);
+            setEndTime(null);
+        }
+    };
+
+    // Get selected slots based on start and end time
+    const getSelectedSlots = () => {
+        if (!startTime || !endTime) return [];
+        const startIndex = slots.findIndex(slot => slot.time === startTime);
+        const endIndex = slots.findIndex(slot => slot.time === endTime);
+        return slots.slice(startIndex, endIndex + 1);
     };
 
     const handleSubmit = async (e) => {
@@ -66,9 +83,13 @@ export default function TeacherAddSlots() {
             alert("Please select a subject!");
             return;
         }
+        if (!startTime || !endTime) {
+            alert("Please select a start and end time for your slots!");
+            return;
+        }
 
         try {
-            const selectedSlots = slots.filter(slot => slot.selected);
+            const selectedSlots = getSelectedSlots();
             for (const slot of selectedSlots) {
                 await addDoc(collection(db, "slots"), {
                     teacherId: user.uid,
@@ -80,7 +101,9 @@ export default function TeacherAddSlots() {
                 });
             }
             alert("Slots added successfully!");
-            setSlots(generateTimeSlots(selectedDate));
+            setSlots(generateTimeSlots(selectedDate)); // Reset slots
+            setStartTime(null); // Reset start time
+            setEndTime(null); // Reset end time
             setSubject("");
         } catch (error) {
             console.error("Error adding slots:", error);
@@ -117,12 +140,14 @@ export default function TeacherAddSlots() {
         if (date) {
             setSelectedDate(date);
             setSlots(generateTimeSlots(date));
+            setStartTime(null); // Reset time selection when date changes
+            setEndTime(null);
         }
     };
 
     useEffect(() => {
         setSlots(generateTimeSlots(selectedDate));
-    }, []);
+    }, [selectedDate]); // Update slots when selectedDate changes
 
     const daysInMonth = getDaysInMonth(currentMonth);
 
@@ -197,19 +222,31 @@ export default function TeacherAddSlots() {
                             <p className="text-xl mb-4">
                                 Selected: {daysOfWeek[selectedDate.getDay()]} {formatDate(selectedDate)}
                             </p>
+                            <p className="text-sm mb-2 text-gray-400">
+                                Click to select start time, then end time. Selected range: {startTime} - {endTime || "Not set"}
+                            </p>
                             <div className="grid grid-cols-4 gap-3">
-                                {slots.map((slot, index) => (
-                                    <button
-                                        key={index}
-                                        type="button"
-                                        onClick={() => toggleSlot(index)}
-                                        className={`p-2 rounded-lg text-sm ${
-                                            slot.selected ? 'bg-indigo-600' : 'bg-gray-700/50 hover:bg-gray-600'
-                                        }`}
-                                    >
-                                        {slot.time}
-                                    </button>
-                                ))}
+                                {slots.map((slot, index) => {
+                                    const isInRange = startTime && endTime && 
+                                        slot.time >= startTime && slot.time <= endTime;
+                                    const isStart = slot.time === startTime;
+                                    const isEnd = slot.time === endTime;
+                                    return (
+                                        <button
+                                            key={index}
+                                            type="button"
+                                            onClick={() => selectTimeSlot(slot.time)}
+                                            className={`p-2 rounded-lg text-sm ${
+                                                isStart ? 'bg-green-600' : 
+                                                isEnd ? 'bg-red-600' : 
+                                                isInRange ? 'bg-indigo-600' : 
+                                                'bg-gray-700/50 hover:bg-gray-600'
+                                            }`}
+                                        >
+                                            {slot.time}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 

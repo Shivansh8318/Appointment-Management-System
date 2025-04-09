@@ -7,7 +7,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 export default function PublicTeacherProfile() {
-    const { teacherId } = useParams();
+    const { teacherUsername } = useParams(); // URL uses teacherUsername
     const { user, loading: authLoading } = useAuthStore();
     const navigate = useNavigate();
     const [teacher, setTeacher] = useState(null);
@@ -17,42 +17,60 @@ export default function PublicTeacherProfile() {
     useEffect(() => {
         const fetchTeacherData = async () => {
             try {
+                // Step 1: Get teacherId from usernames collection using teacherUsername
+                const usernameRef = doc(db, "usernames", teacherUsername);
+                const usernameSnap = await getDoc(usernameRef);
+                if (!usernameSnap.exists()) {
+                    console.log(`No username found for ${teacherUsername}`);
+                    setTeacher(null);
+                    setLoading(false);
+                    return;
+                }
+                const teacherId = usernameSnap.data().uid;
+
+                // Step 2: Fetch teacher data using teacherId
                 const teacherRef = doc(db, "teachers", teacherId);
                 const teacherSnap = await getDoc(teacherRef);
                 if (teacherSnap.exists()) {
-                    setTeacher(teacherSnap.data());
+                    const teacherData = { id: teacherId, ...teacherSnap.data() };
+                    setTeacher(teacherData);
+
+                    // Step 3: Fetch available slots for this teacher
+                    const slotsQuery = query(
+                        collection(db, "slots"),
+                        where("teacherId", "==", teacherId),
+                        where("booked", "==", false)
+                    );
+                    const unsubscribe = onSnapshot(slotsQuery, (snapshot) => {
+                        const slots = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        setAvailableSlots(slots.sort((a, b) => new Date(`${a.date} ${a.time}`) - new Date(`${b.date} ${b.time}`)));
+                    }, (error) => {
+                        console.error("Error fetching slots:", error);
+                    });
+
+                    setLoading(false);
+                    return () => unsubscribe();
                 } else {
+                    console.log(`No teacher found for teacherId: ${teacherId}`);
                     setTeacher(null);
+                    setLoading(false);
                 }
-
-                const slotsQuery = query(
-                    collection(db, "slots"),
-                    where("teacherId", "==", teacherId),
-                    where("booked", "==", false)
-                );
-                const unsubscribe = onSnapshot(slotsQuery, (snapshot) => {
-                    const slots = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    setAvailableSlots(slots.sort((a, b) => new Date(`${a.date} ${a.time}`) - new Date(`${b.date} ${b.time}`))); // Sort by date/time
-                }, (error) => {
-                    console.error("Error fetching slots:", error);
-                });
-
-                setLoading(false);
-                return () => unsubscribe();
             } catch (error) {
                 console.error("Error fetching teacher data:", error);
+                setTeacher(null);
                 setLoading(false);
             }
         };
 
         fetchTeacherData();
-    }, [teacherId]);
+    }, [teacherUsername]);
 
     const bookSlot = async (slotId, slot) => {
         if (authLoading) return;
 
         if (!user || user.role !== "student") {
-            navigate("/student/signin", { state: { from: `/teacher/${teacherId}` } });
+            console.log("Redirecting to signin from:", `/teacher/${teacherUsername}`);
+            navigate("/student/signin", { state: { from: `/teacher/${teacherUsername}` } });
             return;
         }
 
@@ -62,6 +80,7 @@ export default function PublicTeacherProfile() {
                 studentId: user.uid,
                 studentName: user.name || "Student",
                 teacherId: slot.teacherId,
+                teacherUsername: teacherUsername,
                 teacherName: slot.teacherName,
                 date: slot.date,
                 time: slot.time,
@@ -73,6 +92,10 @@ export default function PublicTeacherProfile() {
             console.error("Error booking slot:", error);
             alert("Failed to book slot.");
         }
+    };
+
+    const goToDashboard = () => {
+        navigate("/student/dashboard");
     };
 
     if (authLoading || loading) {
@@ -109,11 +132,22 @@ export default function PublicTeacherProfile() {
                         {teacher.name}'s Profile
                     </h2>
                     <div className="bg-gradient-to-br from-gray-800/70 to-indigo-900/70 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-gray-700/30 mb-12">
+                        <p className="text-lg text-gray-200 mb-2">Username: {teacherUsername}</p>
                         <p className="text-lg text-gray-200 mb-2">Qualification: {teacher.qualification}</p>
                         <p className="text-lg text-gray-200 mb-2">Experience: {teacher.experience} years</p>
                         <p className="text-lg text-gray-200 mb-2">Subjects: {teacher.subjects?.join(", ")}</p>
                         <p className="text-lg text-gray-200">Bio: {teacher.bio}</p>
                     </div>
+
+                    {/* Dashboard Button for Logged-In Students */}
+                    {user && user.role === "student" && (
+                        <button
+                            onClick={goToDashboard}
+                            className="mb-6 px-6 py-2 rounded-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 shadow-lg text-white font-medium transition-all duration-300 hover:shadow-xl hover:scale-105"
+                        >
+                            Go to Dashboard
+                        </button>
+                    )}
 
                     <h3 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
                         Available Classes

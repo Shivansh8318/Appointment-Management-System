@@ -17,7 +17,11 @@ export default function TeacherAppointments() {
         if (!user) return;
         const q = query(collection(db, "appointments"), where("teacherId", "==", user.uid), where("completed", "==", false));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            setAppointments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const fetchedAppointments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            console.log("Fetched appointments for teacher", user.uid, ":", fetchedAppointments);
+            setAppointments(fetchedAppointments);
+        }, (error) => {
+            console.error("Error fetching appointments:", error);
         });
         return () => unsubscribe();
     }, [user]);
