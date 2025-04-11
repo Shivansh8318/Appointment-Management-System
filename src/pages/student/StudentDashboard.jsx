@@ -16,7 +16,6 @@ export default function StudentDashboard() {
     const [pendingHomework, setPendingHomework] = useState([]);
     const [quote, setQuote] = useState("");
 
-    // Fetch student details and profile picture
     useEffect(() => {
         if (user) {
             const fetchStudentDetails = async () => {
@@ -32,13 +31,11 @@ export default function StudentDashboard() {
             };
             fetchStudentDetails();
 
-            // Fetch available classes
             const slotsQuery = query(collection(db, "slots"), where("booked", "==", false));
             const unsubscribeSlots = onSnapshot(slotsQuery, (snapshot) => {
                 setAvailableClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).slice(0, 3));
             });
 
-            // Fetch pending homework
             const homeworkQuery = query(
                 collection(db, "appointments"),
                 where("studentId", "==", user.uid),
@@ -49,7 +46,6 @@ export default function StudentDashboard() {
                 setPendingHomework(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).slice(0, 3));
             });
 
-            // Fetch a random motivational quote (mocked here)
             const quotes = [
                 "The only way to do great work is to love what you do. – Steve Jobs",
                 "Education is the most powerful weapon you can use to change the world. – Nelson Mandela",
@@ -96,25 +92,24 @@ export default function StudentDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-black text-white flex flex-col relative overflow-hidden">
+        <div className="min-h-screen bg-gradient-to-br from-white via-gray-100 to-blue-50 text-gray-900 flex flex-col relative overflow-hidden">
             <div className="absolute inset-0 z-0 animate-float-slow">
-                <svg className="w-full h-full opacity-10" viewBox="0 0 1440 320">
-                    <path fill="#a5b4fc" fillOpacity="0.3" d="M0,224L60,208C120,192,240,160,360,149.3C480,139,600,149,720,165.3C840,181,960,203,1080,197.3C1200,192,1320,160,1380,144L1440,128L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+                <svg className="w-full h-full opacity-20" viewBox="0 0 1440 320">
+                    <path fill="#60a5fa" fillOpacity="0.4" d="M0,224L60,208C120,192,240,160,360,149.3C480,139,600,149,720,165.3C840,181,960,203,1080,197.3C1200,192,1320,160,1380,144L1440,128L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
                 </svg>
             </div>
             <Header />
             <StudentNavbar setActiveTab={() => {}} />
             <section className="flex-grow py-16 px-6 relative z-10 flex">
-                {/* Sidebar */}
                 <div className="w-1/4 pr-6">
-                    <div className="bg-gradient-to-br from-gray-800/70 to-indigo-900/70 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-gray-700/30 animate-slide-in-left sticky top-20">
+                    <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-gray-200 animate-slide-in-left sticky top-20">
                         <div className="relative group mb-6">
                             <img
                                 src={profilePic}
                                 alt="Profile"
-                                className="w-24 h-24 mx-auto rounded-full object-cover shadow-lg animate-pulse-slow"
+                                className="w-24 h-24 mx-auto rounded-full object-cover shadow-md animate-pulse-slow"
                             />
-                            <label className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50 rounded-full cursor-pointer">
+                            <label className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-500/50 rounded-full cursor-pointer">
                                 <span className="text-white font-medium">Change</span>
                                 <input type="file" className="hidden" onChange={handleFileChange} accept="image/*" />
                             </label>
@@ -125,33 +120,33 @@ export default function StudentDashboard() {
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full p-2 bg-gray-700/50 rounded-lg text-white border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full p-2 bg-gray-100 rounded-lg text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                                     placeholder="Name"
                                 />
                                 <input
                                     type="text"
                                     value={formData.subjects.join(", ")}
                                     onChange={(e) => setFormData({ ...formData, subjects: e.target.value.split(", ").map(s => s.trim()) })}
-                                    className="w-full p-2 bg-gray-700/50 rounded-lg text-white border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full p-2 bg-gray-100 rounded-lg text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                                     placeholder="Subjects (comma-separated)"
                                 />
                                 <input
                                     type="text"
                                     value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    className="w-full p-2 bg-gray-700/50 rounded-lg text-white border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full p-2 bg-gray-100 rounded-lg text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                                     placeholder="Phone"
                                 />
                                 <div className="flex space-x-2">
                                     <button
                                         onClick={handleEditSubmit}
-                                        className="flex-1 py-2 rounded-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 shadow-lg font-medium transition-all duration-300 hover:shadow-xl"
+                                        className="flex-1 py-2 rounded-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md font-medium transition-all duration-300 hover:shadow-lg"
                                     >
                                         Save
                                     </button>
                                     <button
                                         onClick={() => setEditMode(false)}
-                                        className="flex-1 py-2 rounded-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 shadow-lg font-medium transition-all duration-300 hover:shadow-xl"
+                                        className="flex-1 py-2 rounded-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-md font-medium transition-all duration-300 hover:shadow-lg"
                                     >
                                         Cancel
                                     </button>
@@ -159,14 +154,14 @@ export default function StudentDashboard() {
                             </div>
                         ) : (
                             <div className="text-center">
-                                <h2 className="text-3xl font-extrabold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-4">
+                                <h2 className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
                                     {student?.name}
                                 </h2>
-                                <p className="text-gray-200 mb-2">Subjects: {student?.subjects?.join(", ")}</p>
-                                <p className="text-gray-200 mb-4">Phone: {student?.phone}</p>
+                                <p className="text-gray-600 mb-2">Subjects: {student?.subjects?.join(", ")}</p>
+                                <p className="text-gray-600 mb-4">Phone: {student?.phone}</p>
                                 <button
                                     onClick={() => setEditMode(true)}
-                                    className="w-full py-2 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg font-medium transition-all duration-300 hover:shadow-xl"
+                                    className="w-full py-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-md font-medium transition-all duration-300 hover:shadow-lg"
                                 >
                                     Edit Profile
                                 </button>
@@ -174,39 +169,36 @@ export default function StudentDashboard() {
                         )}
                         <button
                             onClick={logout}
-                            className="mt-6 w-full py-2 rounded-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 shadow-lg font-medium transition-all duration-300 hover:shadow-xl"
+                            className="mt-6 w-full py-2 rounded-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-md font-medium transition-all duration-300 hover:shadow-lg"
                         >
                             Logout
                         </button>
                     </div>
                 </div>
 
-                {/* Main Content */}
                 <div className="w-3/4 pl-6 space-y-12">
-                    {/* Quick Stats */}
-                    <div className="bg-gradient-to-br from-gray-800/70 to-indigo-900/70 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-gray-700/30 animate-fade-in">
-                        <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent mb-4">
+                    <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-gray-200 animate-fade-in">
+                        <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent mb-4">
                             Quick Stats
                         </h3>
                         <div className="grid grid-cols-3 gap-4">
-                            <div className="p-4 bg-indigo-900/50 rounded-xl text-center">
-                                <p className="text-3xl font-bold text-indigo-300">{pendingHomework.length}</p>
-                                <p className="text-gray-200">Pending Homework</p>
+                            <div className="p-4 bg-blue-100/70 rounded-xl text-center">
+                                <p className="text-3xl font-bold text-blue-600">{pendingHomework.length}</p>
+                                <p className="text-gray-600">Pending Homework</p>
                             </div>
-                            <div className="p-4 bg-teal-900/50 rounded-xl text-center">
-                                <p className="text-3xl font-bold text-teal-300">{availableClasses.length}</p>
-                                <p className="text-gray-200">Available Classes</p>
+                            <div className="p-4 bg-teal-100/70 rounded-xl text-center">
+                                <p className="text-3xl font-bold text-teal-600">{availableClasses.length}</p>
+                                <p className="text-gray-600">Available Classes</p>
                             </div>
-                            <div className="p-4 bg-purple-900/50 rounded-xl text-center">
-                                <p className="text-3xl font-bold text-purple-300">5</p> {/* Placeholder */}
-                                <p className="text-gray-200">Completed Classes</p>
+                            <div className="p-4 bg-purple-100/70 rounded-xl text-center">
+                                <p className="text-3xl font-bold text-purple-600">5</p>
+                                <p className="text-gray-600">Completed Classes</p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Available Classes */}
-                    <div className="bg-gradient-to-br from-gray-800/70 to-indigo-900/70 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-gray-700/30 animate-fade-in">
-                        <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent mb-4">
+                    <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-gray-200 animate-fade-in">
+                        <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent mb-4">
                             Available Classes
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -214,28 +206,27 @@ export default function StudentDashboard() {
                                 availableClasses.map(slot => (
                                     <div
                                         key={slot.id}
-                                        className="p-4 bg-indigo-900/50 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300"
+                                        className="p-4 bg-blue-100/70 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-2 transition-all duration-300"
                                     >
-                                        <p className="text-lg font-semibold text-blue-300">{slot.subject}</p>
-                                        <p className="text-gray-200">Teacher: {slot.teacherName}</p>
-                                        <p className="text-gray-200">{slot.date} at {slot.time}</p>
+                                        <p className="text-lg font-semibold text-blue-600">{slot.subject}</p>
+                                        <p className="text-gray-600">Teacher: {slot.teacherName}</p>
+                                        <p className="text-gray-600">{slot.date} at {slot.time}</p>
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-gray-400">No available classes right now.</p>
+                                <p className="text-gray-600">No available classes right now.</p>
                             )}
                         </div>
                         <button
                             onClick={() => window.location.href = "/student/available-classes"}
-                            className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg text-white font-medium transition-all duration-300 hover:shadow-xl"
+                            className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-md font-medium transition-all duration-300 hover:shadow-lg"
                         >
                             View All Classes
                         </button>
                     </div>
 
-                    {/* Pending Homework */}
-                    <div className="bg-gradient-to-br from-gray-800/70 to-indigo-900/70 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-gray-700/30 animate-fade-in">
-                        <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent mb-4">
+                    <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-gray-200 animate-fade-in">
+                        <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent mb-4">
                             Pending Homework
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -243,29 +234,28 @@ export default function StudentDashboard() {
                                 pendingHomework.map(hw => (
                                     <div
                                         key={hw.id}
-                                        className="p-4 bg-teal-900/50 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300"
+                                        className="p-4 bg-teal-100/70 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-2 transition-all duration-300"
                                     >
-                                        <p className="text-lg font-semibold text-teal-300">{hw.subject}</p>
-                                        <p className="text-gray-200">Teacher: {hw.teacherName}</p>
-                                        <p className="text-gray-200">Due: {hw.date}</p>
-                                        <p className="text-gray-300 mt-2">{hw.homework}</p>
+                                        <p className="text-lg font-semibold text-teal-600">{hw.subject}</p>
+                                        <p className="text-gray-600">Teacher: {hw.teacherName}</p>
+                                        <p className="text-gray-600">Due: {hw.date}</p>
+                                        <p className="text-gray-700 mt-2">{hw.homework}</p>
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-gray-400">No pending homework. Great job!</p>
+                                <p className="text-gray-600">No pending homework. Great job!</p>
                             )}
                         </div>
                         <button
                             onClick={() => window.location.href = "/student/homework"}
-                            className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-teal-600 to-green-600 hover:from-teal-700 hover:to-green-700 shadow-lg text-white font-medium transition-all duration-300 hover:shadow-xl"
+                            className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600 text-white shadow-md font-medium transition-all duration-300 hover:shadow-lg"
                         >
                             View All Homework
                         </button>
                     </div>
 
-                    {/* Motivational Quote */}
-                    <div className="bg-gradient-to-br from-purple-800/70 to-indigo-900/70 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-gray-700/30 animate-fade-in text-center">
-                        <p className="text-xl italic text-gray-200">"{quote}"</p>
+                    <div className="bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-lg border border-gray-200 animate-fade-in text-center">
+                        <p className="text-xl italic text-gray-700">"{quote}"</p>
                     </div>
                 </div>
             </section>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Added for redirect
+import { useNavigate } from "react-router-dom";
 import { db } from "../../config/firebase";
 import { collection, query, where, onSnapshot, doc, setDoc, getDocs, updateDoc } from "firebase/firestore";
 import useAuthStore from "../../store/authStore";
@@ -15,16 +15,14 @@ export default function StudentPastClasses() {
     const [activeTab, setActiveTab] = useState("past");
     const [studentNotes, setStudentNotes] = useState({});
     const [saving, setSaving] = useState(false);
-    const navigate = useNavigate(); // Added for navigation
+    const navigate = useNavigate();
 
-    // Redirect to sign-in if not logged in
     useEffect(() => {
         if (!user) {
             navigate("/student/signin");
         }
     }, [user, navigate]);
 
-    // Fetch teacherUsername from usernames collection
     const fetchTeacherUsername = async (teacherId) => {
         try {
             const usernameQuery = query(collection(db, "usernames"));
@@ -33,7 +31,7 @@ export default function StudentPastClasses() {
 
             usernameSnapshot.forEach(doc => {
                 if (doc.data().uid === teacherId) {
-                    teacherUsername = doc.id; // Document ID is the username
+                    teacherUsername = doc.id;
                 }
             });
 
@@ -61,14 +59,13 @@ export default function StudentPastClasses() {
         const unsubscribeAppointments = onSnapshot(q, async (snapshot) => {
             let classes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
-            // Always fetch teacherUsername from usernames collection to ensure correctness
             classes = await Promise.all(classes.map(async (cls) => {
                 const teacherUsername = await fetchTeacherUsername(cls.teacherId);
-                console.log(`Fetched username for teacherId ${cls.teacherId}: ${teacherUsername}`); // Debug log
-                return { ...cls, teacherUsername }; // Overwrite teacherUsername regardless of existing value
+                console.log(`Fetched username for teacherId ${cls.teacherId}: ${teacherUsername}`);
+                return { ...cls, teacherUsername };
             }));
 
-            console.log("Past classes with updated usernames:", classes); // Debug log
+            console.log("Past classes with updated usernames:", classes);
 
             setPastClasses(classes);
 
@@ -163,7 +160,7 @@ export default function StudentPastClasses() {
         }
         const shareUrl = `${window.location.origin}/teacher/${teacherUsername}`;
         const shareText = `Check out ${teacherName}'s profile and book their classes here: ${shareUrl}`;
-        console.log("Generated share URL:", shareUrl); // Debug log
+        console.log("Generated share URL:", shareUrl);
     
         if (navigator.share) {
             navigator.share({
@@ -191,21 +188,21 @@ export default function StudentPastClasses() {
     };
 
     if (!user) {
-        return null; // Render nothing while redirecting
+        return null;
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-black text-white flex flex-col relative overflow-hidden">
+        <div className="min-h-screen bg-gradient-to-br from-white via-gray-100 to-blue-50 text-gray-900 flex flex-col relative overflow-hidden">
             <div className="absolute inset-0 z-0 animate-parallax">
-                <svg className="w-full h-full opacity-10" viewBox="0 0 1440 320">
-                    <path fill="#c4b5fd" fillOpacity="0.3" d="M0,96L60,112C120,128,240,160,360,165.3C480,171,600,149,720,133.3C840,117,960,107,1080,112C1200,117,1320,139,1380,149.3L1440,160L1440,0L1380,0C1320,0,1200,0,1080,0C960,0,840,0,720,0C600,0,480,0,360,0C240,0,120,0,60,0L0,0Z"></path>
+                <svg className="w-full h-full opacity-20" viewBox="0 0 1440 320">
+                    <path fill="#a78bfa" fillOpacity="0.4" d="M0,96L60,112C120,128,240,160,360,165.3C480,171,600,149,720,133.3C840,117,960,107,1080,112C1200,117,1320,139,1380,149.3L1440,160L1440,0L1380,0C1320,0,1200,0,1080,0C960,0,840,0,720,0C600,0,480,0,360,0C240,0,120,0,60,0L0,0Z"></path>
                 </svg>
             </div>
             <Header />
             <StudentNavbar setActiveTab={setActiveTab} />
             <section className="flex-grow py-16 px-6 relative z-10">
                 <div className="max-w-6xl mx-auto text-center">
-                    <h2 className="text-5xl md:text-6xl font-extrabold mb-12 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent animate-slide-in-up transform hover:scale-105 transition-all duration-500">
+                    <h2 className="text-5xl md:text-6xl font-extrabold mb-12 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent animate-slide-in-up transform hover:scale-105 transition-all duration-500">
                         Past Classes
                     </h2>
                     <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -215,15 +212,15 @@ export default function StudentPastClasses() {
                                 return (
                                     <li
                                         key={app.id}
-                                        className="p-8 bg-gradient-to-br from-purple-900/50 to-gray-800/50 rounded-3xl shadow-2xl hover:shadow-3xl hover:-translate-y-3 hover:rotate-1 transition-all duration-500 border border-purple-500/30 animate-orbit-in cursor-pointer transform perspective-1000"
+                                        className="p-8 bg-white/90 rounded-3xl shadow-lg hover:shadow-xl hover:-translate-y-3 hover:rotate-1 transition-all duration-500 border border-gray-200 animate-orbit-in cursor-pointer transform perspective-1000"
                                         onClick={() => setSelectedClass(selectedClass?.id === app.id ? null : app)}
                                     >
-                                        <p className="text-2xl font-semibold text-purple-300 mb-2 animate-fade-in-delay">{app.subject}</p>
-                                        <p className="text-gray-200 animate-fade-in-delay" style={{ animationDelay: "0.1s" }}>Teacher: {app.teacherName}</p>
-                                        <p className="text-gray-200 animate-fade-in-delay" style={{ animationDelay: "0.2s" }}>{app.date} at {app.time}</p>
-                                        <p className="text-green-400 animate-fade-in-delay" style={{ animationDelay: "0.3s" }}>Completed</p>
+                                        <p className="text-2xl font-semibold text-purple-600 mb-2 animate-fade-in-delay">{app.subject}</p>
+                                        <p className="text-gray-600 animate-fade-in-delay" style={{ animationDelay: "0.1s" }}>Teacher: {app.teacherName}</p>
+                                        <p className="text-gray-600 animate-fade-in-delay" style={{ animationDelay: "0.2s" }}>{app.date} at {app.time}</p>
+                                        <p className="text-green-600 animate-fade-in-delay" style={{ animationDelay: "0.3s" }}>Completed</p>
                                         {app.homework && (
-                                            <p className="text-gray-300 mt-2 animate-fade-in-delay" style={{ animationDelay: "0.4s" }}>
+                                            <p className="text-gray-700 mt-2 animate-fade-in-delay" style={{ animationDelay: "0.4s" }}>
                                                 Homework: {app.homework}
                                             </p>
                                         )}
@@ -232,7 +229,7 @@ export default function StudentPastClasses() {
                                             onChange={(e) => setStudentNotes(prev => ({ ...prev, [noteKey]: e.target.value }))}
                                             onBlur={(e) => saveNote(app.id, e.target.value)}
                                             placeholder={studentNotes[noteKey] || "Add a note..."}
-                                            className="w-full mt-4 p-3 bg-gray-700/50 rounded-lg text-white border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-purple-500 animate-fade-in-delay resize-none"
+                                            className="w-full mt-4 p-3 bg-gray-100 rounded-lg text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 animate-fade-in-delay resize-none"
                                             style={{ animationDelay: "0.5s" }}
                                         />
                                         <button
@@ -240,7 +237,7 @@ export default function StudentPastClasses() {
                                                 e.stopPropagation();
                                                 shareTeacher(app.teacherUsername, app.teacherName);
                                             }}
-                                            className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg text-white font-medium transition-all duration-300 hover:shadow-xl hover:scale-105 animate-bounce-in"
+                                            className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-md font-medium transition-all duration-300 hover:shadow-lg hover:scale-105 animate-bounce-in"
                                         >
                                             Share Teacher
                                         </button>
@@ -248,7 +245,7 @@ export default function StudentPastClasses() {
                                 );
                             })
                         ) : (
-                            <p className="text-gray-400 text-xl animate-fade-in-delay">No past classes yet.</p>
+                            <p className="text-gray-600 text-xl animate-fade-in-delay">No past classes yet.</p>
                         )}
                     </ul>
                     {selectedClass && <PastClassDetails appointment={selectedClass} studentId={user.uid} />}

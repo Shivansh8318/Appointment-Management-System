@@ -7,7 +7,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 export default function PublicTeacherProfile() {
-    const { teacherUsername } = useParams(); // URL uses teacherUsername
+    const { teacherUsername } = useParams();
     const { user, loading: authLoading } = useAuthStore();
     const navigate = useNavigate();
     const [teacher, setTeacher] = useState(null);
@@ -17,7 +17,6 @@ export default function PublicTeacherProfile() {
     useEffect(() => {
         const fetchTeacherData = async () => {
             try {
-                // Step 1: Get teacherId from usernames collection using teacherUsername
                 const usernameRef = doc(db, "usernames", teacherUsername);
                 const usernameSnap = await getDoc(usernameRef);
                 if (!usernameSnap.exists()) {
@@ -28,14 +27,12 @@ export default function PublicTeacherProfile() {
                 }
                 const teacherId = usernameSnap.data().uid;
 
-                // Step 2: Fetch teacher data using teacherId
                 const teacherRef = doc(db, "teachers", teacherId);
                 const teacherSnap = await getDoc(teacherRef);
                 if (teacherSnap.exists()) {
                     const teacherData = { id: teacherId, ...teacherSnap.data() };
                     setTeacher(teacherData);
 
-                    // Step 3: Fetch available slots for this teacher
                     const slotsQuery = query(
                         collection(db, "slots"),
                         where("teacherId", "==", teacherId),
@@ -100,18 +97,18 @@ export default function PublicTeacherProfile() {
 
     if (authLoading || loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-black text-white flex items-center justify-center">
-                <p className="text-xl">Loading...</p>
+            <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 text-gray-900 flex items-center justify-center">
+                <p className="text-xl text-gray-800">Loading...</p>
             </div>
         );
     }
 
     if (!teacher) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-black text-white flex flex-col">
+            <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 text-gray-900 flex flex-col">
                 <Header />
                 <section className="flex-grow py-16 px-6 text-center">
-                    <h2 className="text-4xl font-bold text-gray-400">Teacher not found</h2>
+                    <h2 className="text-4xl font-bold text-gray-600">Teacher not found</h2>
                 </section>
                 <Footer />
             </div>
@@ -119,37 +116,31 @@ export default function PublicTeacherProfile() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-black text-white flex flex-col relative overflow-hidden">
-            <div className="absolute inset-0 z-0 animate-parallax">
-                <svg className="w-full h-full opacity-10" viewBox="0 0 1440 320">
-                    <path fill="#60a5fa" fillOpacity="0.3" d="M0,224L60,208C120,192,240,160,360,149.3C480,139,600,149,720,165.3C840,181,960,203,1080,197.3C1200,192,1320,160,1380,144L1440,128L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
-                </svg>
-            </div>
+        <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 text-gray-900 flex flex-col">
             <Header />
-            <section className="flex-grow py-16 px-6 relative z-10">
+            <section className="flex-grow py-16 px-6">
                 <div className="max-w-6xl mx-auto text-center">
-                    <h2 className="text-5xl md:text-6xl font-extrabold mb-8 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent animate-slide-in-up">
+                    <h2 className="text-5xl md:text-6xl font-extrabold mb-8 text-gray-800">
                         {teacher.name}'s Profile
                     </h2>
-                    <div className="bg-gradient-to-br from-gray-800/70 to-indigo-900/70 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-gray-700/30 mb-12">
-                        <p className="text-lg text-gray-200 mb-2">Username: {teacherUsername}</p>
-                        <p className="text-lg text-gray-200 mb-2">Qualification: {teacher.qualification}</p>
-                        <p className="text-lg text-gray-200 mb-2">Experience: {teacher.experience} years</p>
-                        <p className="text-lg text-gray-200 mb-2">Subjects: {teacher.subjects?.join(", ")}</p>
-                        <p className="text-lg text-gray-200">Bio: {teacher.bio}</p>
+                    <div className="bg-white/90 p-8 rounded-3xl shadow-lg border border-gray-200 mb-12">
+                        <p className="text-lg text-gray-700 mb-2">Username: {teacherUsername}</p>
+                        <p className="text-lg text-gray-700 mb-2">Qualification: {teacher.qualification}</p>
+                        <p className="text-lg text-gray-700 mb-2">Experience: {teacher.experience} years</p>
+                        <p className="text-lg text-gray-700 mb-2">Subjects: {teacher.subjects?.join(", ")}</p>
+                        <p className="text-lg text-gray-700">Bio: {teacher.bio}</p>
                     </div>
 
-                    {/* Dashboard Button for Logged-In Students */}
                     {user && user.role === "student" && (
                         <button
                             onClick={goToDashboard}
-                            className="mb-6 px-6 py-2 rounded-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 shadow-lg text-white font-medium transition-all duration-300 hover:shadow-xl hover:scale-105"
+                            className="mb-6 px-6 py-2 rounded-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 shadow-md text-white font-medium transition-all duration-300 hover:scale-105"
                         >
                             Go to Dashboard
                         </button>
                     )}
 
-                    <h3 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                    <h3 className="text-3xl font-bold mb-6 text-gray-800">
                         Available Classes
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -157,14 +148,14 @@ export default function PublicTeacherProfile() {
                             availableSlots.map(slot => (
                                 <div
                                     key={slot.id}
-                                    className="p-6 bg-gradient-to-br from-indigo-900/50 to-gray-800/50 rounded-3xl shadow-2xl hover:shadow-3xl hover:-translate-y-2 transition-all duration-300 border border-indigo-500/30 animate-fade-in"
+                                    className="p-6 bg-white/90 rounded-3xl shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-gray-200"
                                 >
-                                    <h4 className="text-xl font-semibold text-blue-300 mb-2">{slot.subject}</h4>
-                                    <p className="text-gray-200">Date: {slot.date}</p>
-                                    <p className="text-gray-200">Time: {slot.time}</p>
+                                    <h4 className="text-xl font-semibold text-blue-500 mb-2">{slot.subject}</h4>
+                                    <p className="text-gray-700">Date: {slot.date}</p>
+                                    <p className="text-gray-700">Time: {slot.time}</p>
                                     <button
                                         onClick={() => bookSlot(slot.id, slot)}
-                                        className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg text-white font-medium transition-all duration-300 hover:shadow-xl hover:scale-105"
+                                        className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 shadow-md text-white font-medium transition-all duration-300 hover:scale-105"
                                         disabled={authLoading}
                                     >
                                         Book This Slot
@@ -172,36 +163,12 @@ export default function PublicTeacherProfile() {
                                 </div>
                             ))
                         ) : (
-                            <p className="text-gray-400 text-xl">No available classes at the moment.</p>
+                            <p className="text-gray-600 text-xl">No available classes at the moment.</p>
                         )}
                     </div>
                 </div>
             </section>
             <Footer />
-            <style jsx>{`
-                .animate-fade-in {
-                    animation: fadeIn 1s ease-in;
-                }
-                .animate-parallax {
-                    animation: parallax 20s linear infinite;
-                }
-                .animate-slide-in-up {
-                    animation: slideInUp 1s ease-out;
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes slideInUp {
-                    from { transform: translateY(60px); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
-                }
-                @keyframes parallax {
-                    0% { transform: translateY(0) translateX(0); }
-                    50% { transform: translateY(-20px) translateX(10px); }
-                    100% { transform: translateY(0) translateX(0); }
-                }
-            `}</style>
         </div>
     );
 }

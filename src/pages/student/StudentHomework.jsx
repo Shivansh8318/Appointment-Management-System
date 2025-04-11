@@ -30,17 +30,17 @@ export default function StudentHomework() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-black text-white flex flex-col relative overflow-hidden">
+        <div className="min-h-screen bg-gradient-to-br from-white via-gray-100 to-blue-50 text-gray-900 flex flex-col relative overflow-hidden">
             <div className="absolute inset-0 z-0 animate-parallax">
-                <svg className="w-full h-full opacity-10" viewBox="0 0 1440 320">
-                    <path fill="#60a5fa" fillOpacity="0.3" d="M0,224L60,208C120,192,240,160,360,149.3C480,139,600,149,720,165.3C840,181,960,203,1080,197.3C1200,192,1320,160,1380,144L1440,128L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+                <svg className="w-full h-full opacity-20" viewBox="0 0 1440 320">
+                    <path fill="#60a5fa" fillOpacity="0.4" d="M0,224L60,208C120,192,240,160,360,149.3C480,139,600,149,720,165.3C840,181,960,203,1080,197.3C1200,192,1320,160,1380,144L1440,128L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
                 </svg>
             </div>
             <Header />
             <StudentNavbar setActiveTab={() => {}} />
             <section className="flex-grow py-16 px-6 relative z-10">
                 <div className="max-w-6xl mx-auto text-center">
-                    <h2 className="text-5xl md:text-6xl font-extrabold mb-12 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent animate-slide-in-up">
+                    <h2 className="text-5xl md:text-6xl font-extrabold mb-12 bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent animate-slide-in-up">
                         Your Homework
                     </h2>
                     <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -48,18 +48,18 @@ export default function StudentHomework() {
                             homeworkList.map(hw => (
                                 <li
                                     key={hw.id}
-                                    className="p-8 bg-gradient-to-br from-indigo-900/50 to-gray-800/50 rounded-3xl shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all duration-500 border border-indigo-500/30 animate-orbit-in"
+                                    className="p-8 bg-white/90 rounded-3xl shadow-lg hover:shadow-xl hover:-translate-y-3 transition-all duration-500 border border-gray-200 animate-orbit-in"
                                 >
-                                    <p className="text-2xl font-semibold text-blue-300 mb-2">{hw.subject}</p>
-                                    <p className="text-gray-200">Teacher: {hw.teacherName}</p>
-                                    <p className="text-gray-200">{hw.date} at {hw.time}</p>
-                                    <p className="text-gray-300 mt-2">Homework: {hw.homework}</p>
+                                    <p className="text-2xl font-semibold text-blue-600 mb-2">{hw.subject}</p>
+                                    <p className="text-gray-600">Teacher: {hw.teacherName}</p>
+                                    <p className="text-gray-600">{hw.date} at {hw.time}</p>
+                                    <p className="text-gray-700 mt-2">Homework: {hw.homework}</p>
                                     <button
                                         onClick={() => toggleCompleted(hw.id, hw.homeworkCompleted)}
-                                        className={`mt-4 px-6 py-2 rounded-full shadow-lg transition-all duration-300 ${
+                                        className={`mt-4 px-6 py-2 rounded-full shadow-md transition-all duration-300 text-white ${
                                             hw.homeworkCompleted
-                                                ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
-                                                : "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700"
+                                                ? "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
+                                                : "bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600"
                                         }`}
                                     >
                                         {hw.homeworkCompleted ? "Mark as Incomplete" : "Mark as Completed"}
@@ -67,7 +67,7 @@ export default function StudentHomework() {
                                 </li>
                             ))
                         ) : (
-                            <p className="text-gray-400 text-xl animate-fade-in-delay">No homework assigned yet.</p>
+                            <p className="text-gray-600 text-xl animate-fade-in-delay">No homework assigned yet.</p>
                         )}
                     </ul>
                 </div>

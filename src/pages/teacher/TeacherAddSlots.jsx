@@ -13,11 +13,10 @@ export default function TeacherAddSlots() {
     const [subject, setSubject] = useState("");
     const [teacherSubjects, setTeacherSubjects] = useState([]);
     const [currentMonth, setCurrentMonth] = useState(new Date());
-    const [startTime, setStartTime] = useState(null); // New state for start time
-    const [endTime, setEndTime] = useState(null); // New state for end time
+    const [startTime, setStartTime] = useState(null);
+    const [endTime, setEndTime] = useState(null);
     const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
-    // Fetch teacher's subjects
     useEffect(() => {
         if (user) {
             const fetchTeacherDetails = async () => {
@@ -35,9 +34,9 @@ export default function TeacherAddSlots() {
     const generateTimeSlots = (date) => {
         const slots = [];
         let currentTime = new Date(date);
-        currentTime.setHours(9, 0, 0, 0); // Start at 9 AM
+        currentTime.setHours(9, 0, 0, 0);
         const endTime = new Date(date);
-        endTime.setHours(21, 0, 0, 0); // End at 9 PM
+        endTime.setHours(21, 0, 0, 0);
 
         while (currentTime < endTime) {
             slots.push({
@@ -55,21 +54,18 @@ export default function TeacherAddSlots() {
         return `${day}/${month}/${year}`;
     };
 
-    // Handle time slot selection
     const selectTimeSlot = (time) => {
         if (!startTime) {
             setStartTime(time);
-            setEndTime(null); // Reset end time when selecting a new start
+            setEndTime(null);
         } else if (!endTime && time > startTime) {
             setEndTime(time);
         } else {
-            // If both start and end are set, reset and start anew
             setStartTime(time);
             setEndTime(null);
         }
     };
 
-    // Get selected slots based on start and end time
     const getSelectedSlots = () => {
         if (!startTime || !endTime) return [];
         const startIndex = slots.findIndex(slot => slot.time === startTime);
@@ -101,9 +97,9 @@ export default function TeacherAddSlots() {
                 });
             }
             alert("Slots added successfully!");
-            setSlots(generateTimeSlots(selectedDate)); // Reset slots
-            setStartTime(null); // Reset start time
-            setEndTime(null); // Reset end time
+            setSlots(generateTimeSlots(selectedDate));
+            setStartTime(null);
+            setEndTime(null);
             setSubject("");
         } catch (error) {
             console.error("Error adding slots:", error);
@@ -140,31 +136,31 @@ export default function TeacherAddSlots() {
         if (date) {
             setSelectedDate(date);
             setSlots(generateTimeSlots(date));
-            setStartTime(null); // Reset time selection when date changes
+            setStartTime(null);
             setEndTime(null);
         }
     };
 
     useEffect(() => {
         setSlots(generateTimeSlots(selectedDate));
-    }, [selectedDate]); // Update slots when selectedDate changes
+    }, [selectedDate]);
 
     const daysInMonth = getDaysInMonth(currentMonth);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-black text-white flex flex-col">
+        <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 text-gray-900 flex flex-col">
             <Header />
             <TeacherNavbar />
             <section className="flex-grow py-16 px-6">
                 <div className="max-w-4xl mx-auto">
-                    <h2 className="text-5xl font-extrabold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent mb-12">
+                    <h2 className="text-5xl font-extrabold text-gray-800 mb-12">
                         Add Available Slots
                     </h2>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <select
                             value={subject}
                             onChange={(e) => setSubject(e.target.value)}
-                            className="w-full p-3 bg-gray-700/50 rounded-lg text-white border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-3 bg-gray-100 rounded-lg text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                         >
                             <option value="">Select Subject</option>
                             {teacherSubjects.map((subj) => (
@@ -172,29 +168,29 @@ export default function TeacherAddSlots() {
                             ))}
                         </select>
 
-                        <div className="bg-gray-800/70 p-4 rounded-lg">
+                        <div className="bg-white/90 p-4 rounded-lg border border-gray-200">
                             <div className="flex justify-between items-center mb-4">
                                 <button
                                     type="button"
                                     onClick={() => changeMonth(-1)}
-                                    className="p-2 bg-indigo-600 rounded-full"
+                                    className="p-2 bg-blue-500 text-white rounded-full"
                                 >
                                     ←
                                 </button>
-                                <p className="text-xl">
+                                <p className="text-xl text-gray-800">
                                     {currentMonth.toLocaleString('default', { month: 'long' })} {currentMonth.getFullYear()}
                                 </p>
                                 <button
                                     type="button"
                                     onClick={() => changeMonth(1)}
-                                    className="p-2 bg-indigo-600 rounded-full"
+                                    className="p-2 bg-blue-500 text-white rounded-full"
                                 >
                                     →
                                 </button>
                             </div>
                             <div className="grid grid-cols-7 gap-2 text-center">
                                 {daysOfWeek.map((day) => (
-                                    <div key={day} className="text-sm font-semibold text-indigo-300">
+                                    <div key={day} className="text-sm font-semibold text-blue-500">
                                         {day}
                                     </div>
                                 ))}
@@ -206,8 +202,8 @@ export default function TeacherAddSlots() {
                                         className={`p-2 rounded-full ${
                                             day
                                                 ? selectedDate && day.toDateString() === selectedDate.toDateString()
-                                                    ? 'bg-indigo-600'
-                                                    : 'bg-gray-700/50 hover:bg-gray-600'
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-gray-100 hover:bg-gray-200'
                                                 : 'bg-transparent'
                                         }`}
                                         disabled={!day}
@@ -219,11 +215,11 @@ export default function TeacherAddSlots() {
                         </div>
 
                         <div className="mt-4">
-                            <p className="text-xl mb-4">
+                            <p className="text-xl mb-4 text-gray-800">
                                 Selected: {daysOfWeek[selectedDate.getDay()]} {formatDate(selectedDate)}
                             </p>
-                            <p className="text-sm mb-2 text-gray-400">
-                                Click to select start time, then end time. Selected range: {startTime} - {endTime || "Not set"}
+                            <p className="text-base font-semibold mb-2 bg-blue-100 p-2 rounded-lg text-blue-800">
+                                Click to select start time, then end time. Selected range: {startTime || "Not set"} - {endTime || "Not set"}
                             </p>
                             <div className="grid grid-cols-4 gap-3">
                                 {slots.map((slot, index) => {
@@ -237,10 +233,10 @@ export default function TeacherAddSlots() {
                                             type="button"
                                             onClick={() => selectTimeSlot(slot.time)}
                                             className={`p-2 rounded-lg text-sm ${
-                                                isStart ? 'bg-green-600' : 
-                                                isEnd ? 'bg-red-600' : 
-                                                isInRange ? 'bg-indigo-600' : 
-                                                'bg-gray-700/50 hover:bg-gray-600'
+                                                isStart ? 'bg-green-500 text-white' : 
+                                                isEnd ? 'bg-red-500 text-white' : 
+                                                isInRange ? 'bg-blue-500 text-white' : 
+                                                'bg-gray-100 hover:bg-gray-200'
                                             }`}
                                         >
                                             {slot.time}
@@ -252,7 +248,7 @@ export default function TeacherAddSlots() {
 
                         <button
                             type="submit"
-                            className="w-full py-3 rounded-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700"
+                            className="w-full py-3 rounded-full bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600"
                         >
                             Submit Slots
                         </button>

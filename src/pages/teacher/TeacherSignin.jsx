@@ -68,20 +68,20 @@ export default function TeacherSignin() {
     if (loading) return <div>Loading...</div>;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 to-indigo-900 text-white flex flex-col">
+        <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 text-gray-900 flex flex-col">
             <Header />
             <div className="flex flex-col items-center justify-center flex-grow p-6">
-                <h2 className="text-3xl font-bold mb-6">Teacher Sign In</h2>
-                <div className="bg-gray-800/80 backdrop-blur-sm p-8 rounded-xl w-full max-w-md shadow-2xl border border-gray-700">
+                <h2 className="text-3xl font-bold mb-6 text-gray-800">Teacher Sign In</h2>
+                <div className="bg-white/90 backdrop-blur-sm p-8 rounded-xl w-full max-w-md shadow-lg border border-gray-200">
                     <input
                         type="text"
                         placeholder="Enter phone number"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        className="w-full p-3 mb-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 mb-4 bg-gray-100 text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                     <button
-                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-3 rounded-lg transition-all hover:from-blue-600 hover:to-indigo-600 hover:shadow-lg"
+                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-3 rounded-lg transition-all hover:from-blue-600 hover:to-indigo-600 hover:shadow-md"
                         onClick={sendOTP}
                     >
                         Send OTP
@@ -92,18 +92,18 @@ export default function TeacherSignin() {
                         placeholder="Enter OTP"
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
-                        className="w-full p-3 mt-4 mb-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 mt-4 mb-4 bg-gray-100 text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                     <button
-                        className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-3 rounded-lg transition-all hover:from-green-600 hover:to-teal-600 hover:shadow-lg"
+                        className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-3 rounded-lg transition-all hover:from-green-600 hover:to-teal-600 hover:shadow-md"
                         onClick={verifyOTP}
                     >
                         Verify OTP
                     </button>
-                    <p className="mt-4 text-center text-gray-300">
+                    <p className="mt-4 text-center text-gray-600">
                         Not a teacher yet?{" "}
                         <button
-                            className="text-blue-400 underline hover:text-blue-300 transition-colors"
+                            className="text-blue-500 underline hover:text-blue-600 transition-colors"
                             onClick={() => navigate("/teacher/signup")}
                         >
                             Sign Up

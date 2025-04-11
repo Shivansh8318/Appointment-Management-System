@@ -35,17 +35,17 @@ export default function UpcomingClasses() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-black text-white flex flex-col relative overflow-hidden">
+        <div className="min-h-screen bg-gradient-to-br from-white via-gray-100 to-blue-50 text-gray-900 flex flex-col relative overflow-hidden">
             <div className="absolute inset-0 z-0 animate-parallax">
-                <svg className="w-full h-full opacity-10" viewBox="0 0 1440 320">
-                    <path fill="#5eead4" fillOpacity="0.3" d="M0,224L60,208C120,192,240,160,360,149.3C480,139,600,149,720,165.3C840,181,960,203,1080,197.3C1200,192,1320,160,1380,144L1440,128L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+                <svg className="w-full h-full opacity-20" viewBox="0 0 1440 320">
+                    <path fill="#5eead4" fillOpacity="0.4" d="M0,224L60,208C120,192,240,160,360,149.3C480,139,600,149,720,165.3C840,181,960,203,1080,197.3C1200,192,1320,160,1380,144L1440,128L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
                 </svg>
             </div>
             <Header />
             <StudentNavbar setActiveTab={setActiveTab} />
             <section className="flex-grow py-16 px-6 relative z-10">
                 <div className="max-w-6xl mx-auto text-center">
-                    <h2 className="text-5xl md:text-6xl font-extrabold mb-12 bg-gradient-to-r from-teal-400 to-green-400 bg-clip-text text-transparent animate-slide-in-up transform hover:scale-105 transition-all duration-500">
+                    <h2 className="text-5xl md:text-6xl font-extrabold mb-12 bg-gradient-to-r from-teal-500 to-green-500 bg-clip-text text-transparent animate-slide-in-up transform hover:scale-105 transition-all duration-500">
                         Upcoming Classes
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -53,27 +53,27 @@ export default function UpcomingClasses() {
                             upcomingClasses.map(cls => (
                                 <div
                                     key={cls.id}
-                                    className="p-8 bg-gradient-to-br from-teal-900/50 to-gray-800/50 rounded-3xl shadow-2xl hover:shadow-3xl hover:-translate-y-3 hover:rotate-1 transition-all duration-500 border border-teal-500/30 animate-orbit-in transform perspective-1000"
+                                    className="p-8 bg-white/90 rounded-3xl shadow-lg hover:shadow-xl hover:-translate-y-3 hover:rotate-1 transition-all duration-500 border border-gray-200 animate-orbit-in transform perspective-1000"
                                 >
-                                    <h3 className="text-2xl font-semibold text-teal-300 mb-2 animate-fade-in-delay">{cls.subject}</h3>
-                                    <p className="text-gray-200 animate-fade-in-delay" style={{ animationDelay: "0.1s" }}>Teacher: {cls.teacherName}</p>
-                                    <p className="text-gray-200 animate-fade-in-delay" style={{ animationDelay: "0.2s" }}>Date: {cls.date}</p>
-                                    <p className="text-gray-200 animate-fade-in-delay" style={{ animationDelay: "0.3s" }}>Time: {cls.time}</p>
+                                    <h3 className="text-2xl font-semibold text-teal-600 mb-2 animate-fade-in-delay">{cls.subject}</h3>
+                                    <p className="text-gray-600 animate-fade-in-delay" style={{ animationDelay: "0.1s" }}>Teacher: {cls.teacherName}</p>
+                                    <p className="text-gray-600 animate-fade-in-delay" style={{ animationDelay: "0.2s" }}>Date: {cls.date}</p>
+                                    <p className="text-gray-600 animate-fade-in-delay" style={{ animationDelay: "0.3s" }}>Time: {cls.time}</p>
                                     {cls.homework && (
-                                        <p className="text-gray-300 mt-2 animate-fade-in-delay" style={{ animationDelay: "0.4s" }}>
+                                        <p className="text-gray-700 mt-2 animate-fade-in-delay" style={{ animationDelay: "0.4s" }}>
                                             Homework: {cls.homework}
                                         </p>
                                     )}
                                     <button
                                         onClick={startClass}
-                                        className="mt-6 px-8 py-3 rounded-full bg-gradient-to-r from-teal-600 to-green-600 hover:from-teal-700 hover:to-green-700 shadow-lg text-white font-medium transition-all duration-300 hover:shadow-xl hover:scale-105 animate-bounce-in"
+                                        className="mt-6 px-8 py-3 rounded-full bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600 text-white shadow-md font-medium transition-all duration-300 hover:shadow-lg hover:scale-105 animate-bounce-in"
                                     >
                                         Start Class
                                     </button>
                                 </div>
                             ))
                         ) : (
-                            <p className="text-gray-400 text-xl animate-fade-in-delay">No upcoming classes scheduled.</p>
+                            <p className="text-gray-600 text-xl animate-fade-in-delay">No upcoming classes scheduled.</p>
                         )}
                     </div>
                 </div>
